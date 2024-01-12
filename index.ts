@@ -37,6 +37,33 @@ function makeTasks(json: any): Task[] {
 
   const tasks: Task[] = [];
 
+  WBSArr.forEach((wbs: any) => {
+    const task = {
+      id: wbs.ObjectId?.toString(),
+      parent_id: wbs.ParentObjectId?.toString(),
+      name: wbs.Name?.toString(),
+      get start_date(): string {
+        if (!tasks) return '';
+        const children = tasks.filter(it => it.parent_id === this.id);
+        const starts = children
+          .map(it => it.start_date ? new Date(it.start_date).getTime() : Infinity);
+        const startDate = new Date(Math.min(...starts));
+        const isValid = !isNaN(startDate.getTime());
+        return isValid ? startDate.toISOString() : '';
+      },
+      get end_date() {
+        if (!tasks) return '';
+        const children = tasks.filter(it => it.parent_id === this.id);
+        const ends = children
+          .map(it => it.end_date ? new Date(it.end_date).getTime() : -Infinity);
+        const endDate = new Date(Math.max(...ends));
+        const isValid = !isNaN(endDate.getTime());
+        return isValid ? endDate.toISOString() : '';
+      }
+    };
+    tasks.push(task);
+  });
+
 
   ActivityArr.forEach((activity: any) => {
     const task = {
@@ -49,18 +76,6 @@ function makeTasks(json: any): Task[] {
     };
     tasks.push(task);
   });
-
-  WBSArr.forEach((wbs: any) => {
-    const task = {
-      id: wbs.ObjectId?.toString(),
-      parent_id: wbs.ParentObjectId?.toString(),
-      name: wbs.Name?.toString(),
-      start_date: new Date().toString(),
-      end_date: new Date().toString()
-    };
-    tasks.push(task);
-  });
-
 
   return tasks;
 }
@@ -108,7 +123,7 @@ async function main() {
   const xml = readXml();
   const result: any = await xmlToJson(xml);
   const tasks = makeTasks(result);
-  saveToXlsx(tasks);
+  saveToXlsx(tasks.filter(it => it.start_date && it.end_date));
 }
 
 main();
