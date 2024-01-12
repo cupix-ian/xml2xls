@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "excel4node": "^1.8.2",
+    "ts-node": "^10.9.2",
+    "xml2js": "^0.6.2"
+  }
+}
