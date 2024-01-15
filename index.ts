@@ -110,7 +110,7 @@ function addHead(ws: any) {
  * @param row 2부터 시작
  */
 function addRow(ws: any, task: Task, row: number) {
-  ws.cell(row, 1).string(task.activity_id ?? '(not set)');
+  ws.cell(row, 1).string(task.activity_id ?? task.id);
   ws.cell(row, 2).string(task.name);
   ws.cell(row, 3).string(task.start_date);
   ws.cell(row, 4).string(task.end_date);
