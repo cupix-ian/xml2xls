@@ -1,6 +1,6 @@
-const fs = require('fs');
-const xml2js = require('xml2js');
-const xl = require('excel4node');
+const fs = require("fs");
+const xml2js = require("xml2js");
+const xl = require("excel4node");
 
 interface Task {
   id: string;
@@ -11,9 +11,18 @@ interface Task {
   end_date?: string;
 }
 
+const fileDir: string = ".";
+const fileName: string =
+  "sample.xml";
+const filePath: string = `${fileDir}/${fileName}`;
+
+function removeExt(fileName: string): string {
+  return fileName.split(".").slice(0, -1).join(".");
+}
+
 function readXml() {
   try {
-    return fs.readFileSync('./sample.xml', 'utf8');
+    return fs.readFileSync(filePath, "utf8");
   } catch (err) {
     console.error(err);
   }
@@ -30,10 +39,18 @@ function xmlToJson(xml: string) {
 }
 
 function makeTasks(json: any): Task[] {
-  const projects = Object.values(json).map((it: any) => it.Project).flat();
+  const projects = Object.values(json)
+    .map((it: any) => it.Project)
+    .flat();
 
-  const WBSArr = projects.map((it: any) => it.WBS).filter(Boolean).flat();
-  const ActivityArr = projects.map((it: any) => it.Activity).filter(Boolean).flat();
+  const WBSArr = projects
+    .map((it: any) => it.WBS)
+    .filter(Boolean)
+    .flat();
+  const ActivityArr = projects
+    .map((it: any) => it.Activity)
+    .filter(Boolean)
+    .flat();
 
   const tasks: Task[] = [];
 
@@ -43,27 +60,28 @@ function makeTasks(json: any): Task[] {
       parent_id: wbs.ParentObjectId?.toString(),
       name: wbs.Name?.toString(),
       get start_date(): string {
-        if (!tasks) return '';
-        const children = tasks.filter(it => it.parent_id === this.id);
-        const starts = children
-          .map(it => it.start_date ? new Date(it.start_date).getTime() : Infinity);
+        if (!tasks) return "";
+        const children = tasks.filter((it) => it.parent_id === this.id);
+        const starts = children.map((it) =>
+          it.start_date ? new Date(it.start_date).getTime() : Infinity
+        );
         const startDate = new Date(Math.min(...starts));
         const isValid = !isNaN(startDate.getTime());
-        return isValid ? startDate.toISOString() : '';
+        return isValid ? startDate.toISOString() : "";
       },
       get end_date() {
-        if (!tasks) return '';
-        const children = tasks.filter(it => it.parent_id === this.id);
-        const ends = children
-          .map(it => it.end_date ? new Date(it.end_date).getTime() : -Infinity);
+        if (!tasks) return "";
+        const children = tasks.filter((it) => it.parent_id === this.id);
+        const ends = children.map((it) =>
+          it.end_date ? new Date(it.end_date).getTime() : -Infinity
+        );
         const endDate = new Date(Math.max(...ends));
         const isValid = !isNaN(endDate.getTime());
-        return isValid ? endDate.toISOString() : '';
-      }
+        return isValid ? endDate.toISOString() : "";
+      },
     };
     tasks.push(task);
   });
-
 
   ActivityArr.forEach((activity: any) => {
     const task = {
@@ -72,7 +90,7 @@ function makeTasks(json: any): Task[] {
       name: activity.Name?.toString(),
       start_date: activity.StartDate?.toString(),
       end_date: activity.FinishDate?.toString(),
-      activity_id: activity.Id?.toString()
+      activity_id: activity.Id?.toString(),
     };
     tasks.push(task);
   });
@@ -83,24 +101,23 @@ function makeTasks(json: any): Task[] {
 function saveToXlsx(tasks: Task[]): void {
   const wb = new xl.Workbook();
 
-  const ws = wb.addWorksheet('Sheet 1');
+  const ws = wb.addWorksheet("Sheet 1");
 
   addHead(ws);
   tasks.forEach((task, index) => {
     addRow(ws, task, index + 2);
   });
 
-  wb.write('MyExcelFile.xlsx');
-
+  wb.write(removeExt(fileName) + ".xlsx");
 }
 
 function addHead(ws: any) {
-  ws.cell(1, 1).string('Activity ID');
-  ws.cell(1, 2).string('Task Name');
-  ws.cell(1, 3).string('Start');
-  ws.cell(1, 4).string('End');
-  ws.cell(1, 5).string('ID');
-  ws.cell(1, 6).string('Parent ID');
+  ws.cell(1, 1).string("Activity ID");
+  ws.cell(1, 2).string("Task Name");
+  ws.cell(1, 3).string("Start");
+  ws.cell(1, 4).string("End");
+  ws.cell(1, 5).string("ID");
+  ws.cell(1, 6).string("Parent ID");
   return ws;
 }
 
@@ -123,7 +140,12 @@ async function main() {
   const xml = readXml();
   const result: any = await xmlToJson(xml);
   const tasks = makeTasks(result);
-  saveToXlsx(tasks.filter(it => it.start_date && it.end_date));
+  saveToXlsx(tasks.filter((it) => it.start_date && it.end_date));
+
+  // fs.writeFileSync(
+  //   removeExt(fileName) + ".json",
+  //   JSON.stringify(tasks, null, 2)
+  // );
 }
 
 main();
