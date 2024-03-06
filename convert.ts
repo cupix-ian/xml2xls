@@ -1,6 +1,9 @@
 const fs = require("fs");
 const xml2js = require("xml2js");
 const xl = require("excel4node");
+const path = require('path');
+
+const filePath = process.argv[2];
 
 interface Task {
   id: string;
@@ -11,10 +14,11 @@ interface Task {
   end_date?: string;
 }
 
-const fileDir: string = ".";
-const fileName: string =
-  "sample.xml";
-const filePath: string = `${fileDir}/${fileName}`;
+const fileName = path.basename(filePath);
+
+function fileNameFromPath(path: string): string {
+  return path.split("/").pop() ?? "";
+}
 
 function removeExt(fileName: string): string {
   return fileName.split(".").slice(0, -1).join(".");
